@@ -4,6 +4,7 @@ require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 const app = express();
 
@@ -24,6 +25,9 @@ app.get('/api/health', (req, res) => {
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
+
+// Employee routes
+app.use('/api/employees', employeeRoutes);
 
 // 404 handler
 app.use((req, res) => {

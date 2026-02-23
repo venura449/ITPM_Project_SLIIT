@@ -1,0 +1,107 @@
+/* Employee Management Styles */
+
+.employee-management {
+  min-height: 100vh;
+}
+
+.employee-management input[type="date"],
+.employee-management input[type="number"],
+.employee-management input[type="text"],
+.employee-management input[type="email"],
+.employee-management select,
+.employee-management textarea {
+  background-color: rgba(15, 23, 42, 0.6);
+  color: rgb(206, 240, 255);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.employee-management input[type="date"]:focus,
+.employee-management input[type="number"]:focus,
+.employee-management input[type="text"]:focus,
+.employee-management input[type="email"]:focus,
+.employee-management select:focus,
+.employee-management textarea:focus {
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
+}
+
+.employee-management input:disabled,
+.employee-management select:disabled,
+.employee-management textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.employee-management button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.employee-management table tr:hover {
+  background-color: rgba(30, 41, 59, 0.3);
+}
+
+/* Form Group Styling */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.6);
+}
+
+/* Status Badge Animations */
+.employee-management [class*="status"] {
+  transition: all 0.3s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .employee-management table {
+    font-size: 0.85rem;
+  }
+
+  .employee-management table th,
+  .employee-management table td {
+    padding: 1rem 0.5rem;
+  }
+
+  .employee-management .grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-management button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Loading Animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.employee-management svg.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Glassmorphism Effect */
+.employee-management [class*="backdrop-blur"] {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(51, 65, 85, 0.2);
+}
