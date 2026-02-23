@@ -26,10 +26,10 @@ const RegisterComponent = ({ onSwitch }) => {
     const result = await register(name, email, password);
     
     if (result.success) {
-      // Redirect after a short delay to show success toast
+      // Redirect after delay to show success toast and let user sign in
       setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
+        window.location.href = '/';
+      }, 2500);
     }
   };
 

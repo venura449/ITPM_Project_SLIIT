@@ -18,10 +18,10 @@ const LoginComponent = ({ onSwitch }) => {
     const result = await login(email, password);
     
     if (result.success) {
-      // Redirect after a short delay to show success toast
+      // Redirect after delay to show success toast
       setTimeout(() => {
         window.location.href = '/dashboard';
-      }, 1500);
+      }, 2500);
     }
   };
 

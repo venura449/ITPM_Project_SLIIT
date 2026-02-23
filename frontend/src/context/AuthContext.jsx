@@ -77,12 +77,10 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: data.message };
       }
 
-      setUser(data.user);
-      setToken(data.token);
-      localStorage.setItem('token', data.token);
-      toast.success('Account created successfully! 🎉', {
+      // Don't auto-login after registration, user must login separately
+      toast.success('Account created successfully! 🎉 Please sign in with your credentials.', {
         position: 'top-right',
-        autoClose: 2000,
+        autoClose: 2500,
       });
       return { success: true, message: data.message };
     } catch (err) {
@@ -129,7 +127,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', data.token);
       toast.success('Welcome back! 🚀', {
         position: 'top-right',
-        autoClose: 2000,
+        autoClose: 2500,
       });
       return { success: true, message: data.message };
     } catch (err) {
