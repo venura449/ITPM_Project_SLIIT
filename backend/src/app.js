@@ -5,6 +5,7 @@ require('dotenv').config();
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
+const trainingRoutes = require('./routes/trainingRoutes');
 
 const app = express();
 
@@ -28,6 +29,9 @@ app.use('/api/auth', authRoutes);
 
 // Employee routes
 app.use('/api/employees', employeeRoutes);
+
+// Training routes
+app.use('/api/training', trainingRoutes);
 
 // 404 handler
 app.use((req, res) => {

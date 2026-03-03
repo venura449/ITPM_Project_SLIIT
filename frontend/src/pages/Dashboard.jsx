@@ -2,6 +2,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import EmployeeManagement from '../components/EmployeeManagement';
+import TrainingManagement from '../components/TrainingManagement';
 
 export const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -106,6 +107,17 @@ export const Dashboard = () => {
               >
                 employees
               </button>
+              <button
+                onClick={() => setActiveTab('training')}
+                className={`text-xs uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === 'training'
+                    ? 'text-cyan-300'
+                    : 'text-slate-400 hover:text-cyan-300'
+                }`}
+                style={{ fontFamily: "'Space Mono', monospace" }}
+              >
+                training
+              </button>
               <a href="#" className="text-xs uppercase tracking-[0.2em] text-slate-400 hover:text-cyan-300 transition-colors" style={{ fontFamily: "'Space Mono', monospace" }}>analytics</a>
             </nav>
 
@@ -207,6 +219,13 @@ export const Dashboard = () => {
                       >
                         manage employees
                       </button>
+                      <button
+                        onClick={() => setActiveTab('training')}
+                        className="w-full py-2 px-3 text-xs uppercase tracking-widest text-slate-300 hover:text-cyan-300 border border-slate-700 hover:border-cyan-400/50 rounded-lg transition-all duration-200 bg-slate-900/50 hover:bg-slate-800"
+                        style={{ fontFamily: "'Space Mono', monospace" }}
+                      >
+                        manage training
+                      </button>
                     </div>
                   </div>
 
@@ -244,6 +263,8 @@ export const Dashboard = () => {
             </div>
           ) : activeTab === 'employees' ? (
             <EmployeeManagement />
+          ) : activeTab === 'training' ? (
+            <TrainingManagement />
           ) : null}
         </main>
       </div>

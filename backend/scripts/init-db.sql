@@ -75,5 +75,91 @@ CREATE TABLE IF NOT EXISTS employee_roles (
   INDEX idx_employee_roles (employee_id)
 );
 
+-- Create training_programs table for Training & Workforce Development (Dias)
+CREATE TABLE IF NOT EXISTS training_programs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  type ENUM('Internal', 'External') NOT NULL,
+  description TEXT,
+  duration_hours DECIMAL(8, 2),
+  budget DECIMAL(12, 2),
+  trainer_id INT,
+  status ENUM('Planned', 'In Progress', 'Completed', 'Cancelled') DEFAULT 'Planned',
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  location VARCHAR(255),
+  max_participants INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (trainer_id) REFERENCES employees(id) ON DELETE SET NULL,
+  INDEX idx_type (type),
+  INDEX idx_status (status),
+  INDEX idx_start_date (start_date),
+  INDEX idx_end_date (end_date)
+);
+
+-- Create training_sessions table for workshop and session scheduling
+CREATE TABLE IF NOT EXISTS training_sessions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  program_id INT NOT NULL,
+  session_number INT,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  scheduled_date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  location VARCHAR(255),
+  facilitator_id INT,
+  max_capacity INT,
+  status ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled') DEFAULT 'Scheduled',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (program_id) REFERENCES training_programs(id) ON DELETE CASCADE,
+  FOREIGN KEY (facilitator_id) REFERENCES employees(id) ON DELETE SET NULL,
+  INDEX idx_program_id (program_id),
+  INDEX idx_scheduled_date (scheduled_date),
+  INDEX idx_status (status)
+);
+
+-- Create training_assignments table for assigning employees to programs
+CREATE TABLE IF NOT EXISTS training_assignments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  program_id INT NOT NULL,
+  employee_id INT NOT NULL,
+  assigned_by INT,
+  assignment_date DATE,
+  status ENUM('Assigned', 'In Progress', 'Dropped', 'Completed') DEFAULT 'Assigned',
+  completion_status ENUM('Pending', 'In Progress', 'Completed', 'Not Started') DEFAULT 'Pending',
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (program_id) REFERENCES training_programs(id) ON DELETE CASCADE,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL,
+  UNIQUE KEY unique_assignment (program_id, employee_id),
+  INDEX idx_program_id (program_id),
+  INDEX idx_employee_id (employee_id),
+  INDEX idx_completion_status (completion_status)
+);
+
+-- Create training_attendance table for tracking attendance
+CREATE TABLE IF NOT EXISTS training_attendance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  session_id INT NOT NULL,
+  employee_id INT NOT NULL,
+  attendance_status ENUM('Present', 'Absent', 'Late', 'Pending') DEFAULT 'Pending',
+  check_in_time DATETIME,
+  check_out_time DATETIME,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (session_id) REFERENCES training_sessions(id) ON DELETE CASCADE,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_attendance (session_id, employee_id),
+  INDEX idx_session_id (session_id),
+  INDEX idx_employee_id (employee_id),
+  INDEX idx_attendance_status (attendance_status)
+);
+
 -- Add sample data (optional)
 -- INSERT INTO users (name, email, password) VALUES ('John Doe', 'john@example.com', 'hashed_password_here');

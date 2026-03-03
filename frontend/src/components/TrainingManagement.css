@@ -1,0 +1,52 @@
+/* Training Management Styles */
+
+.training-management {
+  --slate-950: #030712;
+  --slate-900: #0f172a;
+  --slate-800: #1e293b;
+  --slate-700: #334155;
+  --cyan-400: #22d3ee;
+  --cyan-300: #06b6d4;
+  --cyan-50: #f0f9fa;
+}
+
+.training-management input,
+.training-management select,
+.training-management textarea {
+  transition: border-color 0.2s ease;
+}
+
+.training-management input:focus,
+.training-management select:focus,
+.training-management textarea:focus {
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.05);
+}
+
+.training-management input::placeholder {
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.training-management select option {
+  background-color: #1e293b;
+  color: #f0f9fa;
+}
+
+/* Scrollbar styling */
+.training-management ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.training-management ::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.training-management ::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.3);
+  border-radius: 3px;
+}
+
+.training-management ::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.5);
+}
