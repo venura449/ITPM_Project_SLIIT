@@ -32,7 +32,9 @@ class AttendanceController {
         });
       }
 
-      // Get attendance records for this date
+      // Build attendance map keyed by the string employee code ("EMP001").
+      // Note: SELECT a.*, e.employee_id causes e.employee_id (string) to override
+      // a.employee_id (numeric FK) in the result, so we must look up by the same string key.
       const attendanceRecords = await Attendance.getByDate(date);
       const attendanceMap = {};
       attendanceRecords.forEach(record => {
@@ -41,7 +43,7 @@ class AttendanceController {
 
       // Merge employees with attendance data
       const mergedData = allEmployees.map(emp => {
-        const attendance = attendanceMap[emp.id];
+        const attendance = attendanceMap[emp.employee_id];
         return {
           id: emp.id,
           employee_id: emp.employee_id,
