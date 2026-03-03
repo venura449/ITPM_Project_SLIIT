@@ -296,6 +296,27 @@ class Employee {
   static async getByStatus(status) {
     return await this.getAll({ status });
   }
+
+  /**
+   * Search employees by name or ID
+   * @param {string} searchTerm - Search term (wildcard-compatible)
+   * @returns {Promise<Array>} Array of matching employees
+   */
+  static async searchByNameOrId(searchTerm) {
+    const connection = await pool.getConnection();
+    try {
+      const [rows] = await connection.query(
+        `SELECT e.id, e.employee_id, e.name, e.email, e.department, e.position, e.status
+         FROM employees e
+         WHERE e.name LIKE ? OR e.employee_id LIKE ? OR e.email LIKE ?
+         ORDER BY e.name ASC`,
+        [searchTerm, searchTerm, searchTerm]
+      );
+      return rows;
+    } finally {
+      connection.release();
+    }
+  }
 }
 
 module.exports = Employee;

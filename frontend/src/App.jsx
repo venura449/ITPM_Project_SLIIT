@@ -1,7 +1,15 @@
-import { AuthProvider, AuthContext } from './context/AuthContext';
-import { AuthPage } from './pages/AuthPage';
-import { Dashboard } from './pages/Dashboard';
-import { useContext } from 'react';
+import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { AuthPage } from "./pages/AuthPage";
+import { Dashboard } from "./pages/Dashboard";
+import EmployeeLogin from "./components/EmployeeLogin";
+import EmployeeDashboard from "./components/EmployeeDashboard";
+import { useContext } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 function AppContent() {
   const { isAuthenticated, loading } = useContext(AuthContext);
@@ -17,14 +25,44 @@ function AppContent() {
     );
   }
 
-  return isAuthenticated ? <Dashboard /> : <AuthPage />;
+  return (
+    <Routes>
+      {/* Employee Portal Routes */}
+      <Route path="/employee-login" element={<EmployeeLogin />} />
+      <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
+
+      {/* Admin Portal Routes */}
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage />}
+      />
+      <Route
+        path="/dashboard"
+        element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+      />
+
+      {/* Default redirect */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+    </Routes>
+  );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 }
 

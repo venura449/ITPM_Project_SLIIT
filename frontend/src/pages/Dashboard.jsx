@@ -4,6 +4,10 @@ import { toast } from "react-toastify";
 import EmployeeManagement from "../components/EmployeeManagement";
 import TrainingManagement from "../components/TrainingManagement";
 import ProfileEditModal from "../components/ProfileEditModal";
+import AttendanceSheet from "../components/AttendanceSheet";
+import LeaveAndAttendance from "../components/LeaveAndAttendance";
+import SettingsPanel from "../components/SettingsPanel";
+import EmployeeReport from "../components/EmployeeReport";
 
 export const Dashboard = () => {
   const { user, logout, updateProfile } = useAuth();
@@ -153,13 +157,50 @@ export const Dashboard = () => {
               >
                 training
               </button>
-              <a
-                href="#"
-                className="text-xs uppercase tracking-[0.2em] text-slate-400 hover:text-cyan-300 transition-colors"
+              <button
+                onClick={() => setActiveTab("attendance")}
+                className={`text-xs uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === "attendance"
+                    ? "text-cyan-300"
+                    : "text-slate-400 hover:text-cyan-300"
+                }`}
                 style={{ fontFamily: "'Space Mono', monospace" }}
               >
-                analytics
-              </a>
+                attendance
+              </button>
+              <button
+                onClick={() => setActiveTab("leave")}
+                className={`text-xs uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === "leave"
+                    ? "text-cyan-300"
+                    : "text-slate-400 hover:text-cyan-300"
+                }`}
+                style={{ fontFamily: "'Space Mono', monospace" }}
+              >
+                leave
+              </button>
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`text-xs uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === "settings"
+                    ? "text-cyan-300"
+                    : "text-slate-400 hover:text-cyan-300"
+                }`}
+                style={{ fontFamily: "'Space Mono', monospace" }}
+              >
+                settings
+              </button>
+              <button
+                onClick={() => setActiveTab("reports")}
+                className={`text-xs uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === "reports"
+                    ? "text-cyan-300"
+                    : "text-slate-400 hover:text-cyan-300"
+                }`}
+                style={{ fontFamily: "'Space Mono', monospace" }}
+              >
+                reports
+              </button>
             </nav>
 
             <div className="flex items-center gap-4">
@@ -374,6 +415,14 @@ export const Dashboard = () => {
             <EmployeeManagement />
           ) : activeTab === "training" ? (
             <TrainingManagement />
+          ) : activeTab === "attendance" ? (
+            <AttendanceSheet />
+          ) : activeTab === "leave" ? (
+            <LeaveAndAttendance />
+          ) : activeTab === "settings" ? (
+            <SettingsPanel />
+          ) : activeTab === "reports" ? (
+            <EmployeeReport />
           ) : null}
         </main>
       </div>
