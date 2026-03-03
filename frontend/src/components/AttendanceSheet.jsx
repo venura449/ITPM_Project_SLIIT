@@ -49,10 +49,15 @@ const AttendanceSheet = () => {
       const data = await response.json();
       if (data.success) {
         setAttendanceData(data.data || []);
-        // Pre-populate marked attendance
+        // Pre-populate marked attendance from saved records for this date
         const marked = {};
         data.data.forEach((record) => {
-          marked[record.employee_id] = record.status;
+          if (
+            record.attendance_status &&
+            record.attendance_status !== "Not Marked"
+          ) {
+            marked[record.employee_id] = record.attendance_status;
+          }
         });
         setMarkedAttendance(marked);
       }
@@ -375,29 +380,43 @@ const AttendanceSheet = () => {
                           "Leave",
                           "Half Day",
                           "Work From Home",
-                        ].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() =>
-                              markAttendance(emp.employee_id, status)
-                            }
-                            className={`px-2 py-1 text-xs rounded transition-all ${
-                              markedAttendance[emp.employee_id] === status
-                                ? "bg-cyan-600/40 text-cyan-300 border border-cyan-500/50"
-                                : "bg-slate-700/20 text-slate-400 hover:bg-slate-700/40 border border-slate-700/30"
-                            }`}
-                          >
-                            {status === "Present"
-                              ? "P"
-                              : status === "Absent"
-                                ? "A"
-                                : status === "Leave"
-                                  ? "L"
-                                  : status === "Half Day"
-                                    ? "H"
-                                    : "WFH"}
-                          </button>
-                        ))}
+                        ].map((status) => {
+                          const isMarked = !!markedAttendance[emp.employee_id];
+                          const isSelected =
+                            markedAttendance[emp.employee_id] === status;
+                          return (
+                            <button
+                              key={status}
+                              onClick={() =>
+                                !isMarked &&
+                                markAttendance(emp.employee_id, status)
+                              }
+                              disabled={isMarked && !isSelected}
+                              title={
+                                isMarked && !isSelected
+                                  ? "Attendance already marked for this day"
+                                  : status
+                              }
+                              className={`px-2 py-1 text-xs rounded transition-all border ${
+                                isSelected
+                                  ? "bg-cyan-600/40 text-cyan-300 border-cyan-500/50"
+                                  : isMarked
+                                    ? "bg-slate-800/20 text-slate-600 border-slate-800/20 cursor-not-allowed opacity-40"
+                                    : "bg-slate-700/20 text-slate-400 hover:bg-slate-700/40 border-slate-700/30 cursor-pointer"
+                              }`}
+                            >
+                              {status === "Present"
+                                ? "P"
+                                : status === "Absent"
+                                  ? "A"
+                                  : status === "Leave"
+                                    ? "L"
+                                    : status === "Half Day"
+                                      ? "H"
+                                      : "WFH"}
+                            </button>
+                          );
+                        })}
                       </div>
                     </td>
                   </tr>
