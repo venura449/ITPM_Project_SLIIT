@@ -9,6 +9,9 @@ router.post('/', EmployeeController.createEmployee);
 // Get all employees (with optional filters)
 router.get('/', EmployeeController.getAllEmployees);
 
+// Get next available employee ID
+router.get('/next-id', EmployeeController.getNextEmployeeId);
+
 // Get employees by status
 router.get('/status/:status', EmployeeController.getByStatus);
 

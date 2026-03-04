@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const AttendanceReport = () => {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [exportFormat, setExportFormat] = useState("pdf");
+
+  // Date range for PDF header labeling
+  const getMonthStart = () => `${year}-${String(month).padStart(2, "0")}-01`;
+  const getMonthEnd = () => {
+    const d = new Date(year, month, 0);
+    return `${year}-${String(month).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
 
   useEffect(() => {
     loadMonthlyReport();
@@ -44,11 +52,296 @@ const AttendanceReport = () => {
   };
 
   const generateReport = () => {
-    // Mock implementation - would call backend to generate PDF/Excel
-    toast.info("Report generation coming soon!", {
-      position: "top-right",
-      autoClose: 3000,
+    if (reportData.length === 0) {
+      toast.warning("No data to export. Please select a valid period.");
+      return;
+    }
+
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
     });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 15;
+
+    // ── HEADER BANNER ────────────────────────────────────────────────
+    doc.setFillColor(15, 23, 42); // slate-900
+    doc.rect(0, 0, pageW, 42, "F");
+    doc.setFillColor(6, 182, 212); // cyan accent stripe
+    doc.rect(0, 38, pageW, 4, "F");
+
+    // System label (top left)
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "normal");
+    doc.text("ATTENDANCE MANAGEMENT SYSTEM  ·  PERIOD REPORT", margin, 12);
+
+    // Main title
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(17);
+    doc.setFont("helvetica", "bold");
+    doc.text("Attendance Report", margin, 24);
+
+    // Period sub-label
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(6, 182, 212);
+    doc.text(
+      `Period: ${monthNames[month - 1]} ${year}  (${getMonthStart()} – ${getMonthEnd()})`,
+      margin,
+      33,
+    );
+
+    // Right side — generated date & summary
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      `Generated: ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`,
+      pageW - margin,
+      12,
+      { align: "right" },
+    );
+    doc.text(`Total Employees: ${reportData.length}`, pageW - margin, 20, {
+      align: "right",
+    });
+    const workingDays = getTotalWorkingDays(month, year);
+    doc.text(`Working Days: ${workingDays}`, pageW - margin, 28, {
+      align: "right",
+    });
+
+    let y = 52;
+
+    // ── SUMMARY STAT BOXES ────────────────────────────────────────────
+    const totalPresent = reportData.reduce((s, e) => s + (e.present || 0), 0);
+    const totalAbsent = reportData.reduce((s, e) => s + (e.absent || 0), 0);
+    const totalLeave = reportData.reduce((s, e) => s + (e.leave || 0), 0);
+    const totalHalfDay = reportData.reduce((s, e) => s + (e.half_day || 0), 0);
+    const totalWfh = reportData.reduce(
+      (s, e) => s + (e.work_from_home || 0),
+      0,
+    );
+    const avgRate =
+      reportData.length > 0
+        ? (
+            reportData.reduce(
+              (s, e) => s + parseFloat(calculateStats(e).attendanceRate),
+              0,
+            ) / reportData.length
+          ).toFixed(1)
+        : 0;
+
+    const stats = [
+      {
+        label: "Total Present",
+        value: totalPresent,
+        fill: [220, 252, 231],
+        txt: [22, 101, 52],
+      },
+      {
+        label: "Total Absent",
+        value: totalAbsent,
+        fill: [254, 226, 226],
+        txt: [185, 28, 28],
+      },
+      {
+        label: "On Leave",
+        value: totalLeave,
+        fill: [254, 243, 199],
+        txt: [146, 64, 14],
+      },
+      {
+        label: "Half Day",
+        value: totalHalfDay,
+        fill: [219, 234, 254],
+        txt: [29, 78, 216],
+      },
+      {
+        label: "Work From Home",
+        value: totalWfh,
+        fill: [237, 233, 254],
+        txt: [109, 40, 217],
+      },
+      {
+        label: "Avg Attendance",
+        value: `${avgRate}%`,
+        fill: [240, 253, 244],
+        txt: [21, 128, 61],
+      },
+    ];
+    const boxW = (pageW - margin * 2 - 5 * 4) / 6;
+    stats.forEach((s, i) => {
+      const x = margin + i * (boxW + 4);
+      doc.setFillColor(...s.fill);
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(x, y, boxW, 18, 2.5, 2.5, "FD");
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(107, 114, 128);
+      doc.text(s.label.toUpperCase(), x + boxW / 2, y + 6, { align: "center" });
+      doc.setFontSize(13);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...s.txt);
+      doc.text(String(s.value), x + boxW / 2, y + 14, { align: "center" });
+    });
+    y += 26;
+
+    // ── MAIN TABLE ────────────────────────────────────────────────────
+    autoTable(doc, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [
+        [
+          "#",
+          "Employee",
+          "Employee ID",
+          "Department",
+          "Present",
+          "Absent",
+          "Leave",
+          "Half Day",
+          "WFH",
+          "Attendance %",
+        ],
+      ],
+      body: reportData.map((emp, idx) => {
+        const stats = calculateStats(emp);
+        return [
+          idx + 1,
+          emp.name,
+          emp.employee_id,
+          emp.department || "—",
+          emp.present || 0,
+          emp.absent || 0,
+          emp.leave || 0,
+          emp.half_day || 0,
+          emp.work_from_home || 0,
+          `${stats.attendanceRate}%`,
+        ];
+      }),
+      styles: {
+        fontSize: 8.5,
+        cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+        font: "helvetica",
+        textColor: [55, 65, 81],
+        valign: "middle",
+      },
+      headStyles: {
+        fillColor: [15, 23, 42],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 8,
+        cellPadding: { top: 5, bottom: 5, left: 5, right: 5 },
+      },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        0: { cellWidth: 9, halign: "center" },
+        1: { cellWidth: 42 },
+        2: { cellWidth: 24, halign: "center" },
+        3: { cellWidth: 36 },
+        4: { cellWidth: 18, halign: "center" },
+        5: { cellWidth: 16, halign: "center" },
+        6: { cellWidth: 14, halign: "center" },
+        7: { cellWidth: 19, halign: "center" },
+        8: { cellWidth: 16, halign: "center" },
+        9: { cellWidth: 24, halign: "center" },
+      },
+      tableLineColor: [226, 232, 240],
+      tableLineWidth: 0.15,
+      theme: "grid",
+      didDrawCell: (data) => {
+        if (data.section !== "body") return;
+        const col = data.column.index;
+        const raw = data.cell.raw;
+        const { x, y: cy, width, height } = data.cell;
+        const cx = x + width / 2;
+        const midY = cy + height / 2 + 1;
+
+        // Color-coded count badges
+        const badgeCfg = {
+          4: [220, 252, 231], // present - green
+          5: [254, 226, 226], // absent - red
+          6: [254, 243, 199], // leave - yellow
+          7: [219, 234, 254], // half day - blue
+          8: [237, 233, 254], // wfh - purple
+        };
+        if (badgeCfg[col] && raw !== 0) {
+          doc.setFillColor(...badgeCfg[col]);
+          doc.roundedRect(x + 2, cy + 2, width - 4, height - 4, 2, 2, "F");
+          doc.setFontSize(8.5);
+          doc.setFont("helvetica", "bold");
+          const txtCfg = {
+            4: [22, 101, 52],
+            5: [185, 28, 28],
+            6: [146, 64, 14],
+            7: [29, 78, 216],
+            8: [109, 40, 217],
+          };
+          doc.setTextColor(...txtCfg[col]);
+          doc.text(String(raw), cx, midY, { align: "center" });
+        }
+        // Attendance % bar
+        if (col === 9) {
+          const pct = parseFloat(raw) || 0;
+          const barW = width - 10;
+          const barH = 3.5;
+          const barX = x + 5;
+          const barY = cy + height - 6;
+          doc.setFillColor(226, 232, 240);
+          doc.roundedRect(barX, barY, barW, barH, 1, 1, "F");
+          const fillColor =
+            pct >= 75
+              ? [34, 197, 94]
+              : pct >= 50
+                ? [234, 179, 8]
+                : [239, 68, 68];
+          doc.setFillColor(...fillColor);
+          doc.roundedRect(
+            barX,
+            barY,
+            Math.max(0, (barW * pct) / 100),
+            barH,
+            1,
+            1,
+            "F",
+          );
+          doc.setFontSize(8.5);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(
+            pct >= 75 ? 22 : pct >= 50 ? 133 : 185,
+            pct >= 75 ? 101 : pct >= 50 ? 77 : 28,
+            pct >= 75 ? 52 : pct >= 50 ? 14 : 28,
+          );
+          doc.text(raw, cx, cy + height / 2 - 0.5, { align: "center" });
+        }
+      },
+    });
+
+    // ── FOOTER on all pages ───────────────────────────────────────────
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.3);
+      doc.line(margin, pageH - 10, pageW - margin, pageH - 10);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(148, 163, 184);
+      doc.text(
+        `Attendance Management System  ·  ${monthNames[month - 1]} ${year} Report  ·  Confidential`,
+        margin,
+        pageH - 5.5,
+      );
+      doc.text(`Page ${i} of ${totalPages}`, pageW - margin, pageH - 5.5, {
+        align: "right",
+      });
+    }
+
+    const filename = `Attendance_Report_${monthNames[month - 1]}_${year}.pdf`;
+    doc.save(filename);
+    toast.success(`Report downloaded: ${filename}`);
   };
 
   const monthNames = [
@@ -116,7 +409,7 @@ const AttendanceReport = () => {
       </div>
 
       {/* Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {/* Month Selector */}
         <div className="p-4 rounded-lg border border-slate-700/40 bg-slate-800/20">
           <label
@@ -159,32 +452,49 @@ const AttendanceReport = () => {
           </select>
         </div>
 
-        {/* Format Selector */}
-        <div className="p-4 rounded-lg border border-slate-700/40 bg-slate-800/20">
-          <label
-            className="text-xs text-slate-600 uppercase tracking-wider mb-2 block"
-            style={{ fontFamily: "'Space Mono', monospace" }}
-          >
-            Export Format
-          </label>
-          <select
-            value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value)}
-            className="w-full bg-slate-900/60 text-cyan-50 rounded-lg px-4 py-2 border border-slate-700/40 focus:border-cyan-400/60 outline-none transition-colors text-sm"
-          >
-            <option value="pdf">PDF</option>
-            <option value="excel">Excel</option>
-            <option value="csv">CSV</option>
-          </select>
-        </div>
-
-        {/* Generate Button */}
+        {/* Download PDF Button */}
         <div className="p-4 rounded-lg border border-slate-700/40 bg-slate-800/20 flex items-end">
           <button
             onClick={generateReport}
-            className="w-full px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-950 font-semibold rounded-lg transition-all bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-lg transition-all bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Generate Report
+            {loading ? (
+              <svg
+                className="w-4 h-4 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"
+                />
+              </svg>
+            )}
+            Download PDF Report
           </button>
         </div>
       </div>

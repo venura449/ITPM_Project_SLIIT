@@ -280,6 +280,24 @@ class Employee {
   }
 
   /**
+   * Generate next available employee ID (e.g. EMP007)
+   * @returns {Promise<string>} Next employee ID
+   */
+  static async getNextEmployeeId() {
+    const connection = await pool.getConnection();
+    try {
+      const [rows] = await connection.query(
+        `SELECT employee_id FROM employees WHERE employee_id REGEXP '^EMP[0-9]+$' ORDER BY CAST(SUBSTRING(employee_id, 4) AS UNSIGNED) DESC LIMIT 1`
+      );
+      if (rows.length === 0) return 'EMP001';
+      const lastNum = parseInt(rows[0].employee_id.replace(/^EMP/, ''), 10);
+      return 'EMP' + String(lastNum + 1).padStart(3, '0');
+    } finally {
+      connection.release();
+    }
+  }
+
+  /**
    * Get employees by department
    * @param {string} department - Department name
    * @returns {Promise<Array>} Array of employees in the department

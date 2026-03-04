@@ -1,43 +1,36 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import TrainingList from './TrainingList';
-import CreateTrainingForm from './CreateTrainingForm';
-import TrainingDetails from './TrainingDetails';
-import './TrainingManagement.css';
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import TrainingList from "./TrainingList";
+import CreateTrainingForm from "./CreateTrainingForm";
+import TrainingDetails from "./TrainingDetails";
 
 const TrainingManagement = () => {
-  const [activeTab, setActiveTab] = useState('programs');
   const [programs, setPrograms] = useState([]);
   const [selectedProgram, setSelectedProgram] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    type: '',
-    status: '',
-    search: ''
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    programId: null,
+    programTitle: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({ type: "", status: "", search: "" });
 
-  const API_URL = 'http://localhost:5000/api/training';
+  const API_URL = "http://localhost:5000/api/training";
 
-  // Fetch training programs
   const fetchPrograms = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filters.type) params.append('type', filters.type);
-      if (filters.status) params.append('status', filters.status);
-      if (filters.search) params.append('search', filters.search);
-
+      if (filters.type) params.append("type", filters.type);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.search) params.append("search", filters.search);
       const response = await fetch(`${API_URL}/programs?${params}`);
       const data = await response.json();
-
-      if (data.success) {
-        setPrograms(data.data);
-      } else {
-        toast.error(data.message);
-      }
-    } catch (err) {
-      console.error('Fetch error:', err);
-      toast.error('Failed to fetch training programs');
+      if (data.success) setPrograms(data.data);
+      else toast.error(data.message);
+    } catch {
+      toast.error("Failed to fetch training programs");
     } finally {
       setLoading(false);
     }
@@ -48,165 +41,185 @@ const TrainingManagement = () => {
   }, [filters]);
 
   const handleCreateProgram = async (formData) => {
-    try {
-      const response = await fetch(`${API_URL}/programs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Training program created successfully! 🎉');
-        setActiveTab('programs');
-        fetchPrograms();
-      } else {
-        toast.error(data.message);
-      }
-    } catch (err) {
-      console.error('Create program error:', err);
-      toast.error('Failed to create training program');
+    const response = await fetch(`${API_URL}/programs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+    const data = await response.json();
+    if (data.success) {
+      toast.success("Training program created successfully!");
+      setShowCreateModal(false);
+      fetchPrograms();
+    } else {
+      toast.error(data.message);
+      throw new Error(data.message);
     }
-  };
-
-  const handleSelectProgram = (program) => {
-    setSelectedProgram(program);
-    setActiveTab('details');
   };
 
   const handleUpdateProgram = async (programId, updateData) => {
     try {
       const response = await fetch(`${API_URL}/programs/${programId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData)
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
       });
-
       const data = await response.json();
-
       if (data.success) {
-        toast.success('Training program updated successfully! ✨');
+        toast.success("Program updated!");
         fetchPrograms();
         return true;
       } else {
         toast.error(data.message);
         return false;
       }
-    } catch (err) {
-      console.error('Update error:', err);
-      toast.error('Failed to update training program');
+    } catch {
+      toast.error("Failed to update program");
       return false;
     }
   };
 
-  const handleDeleteProgram = async (programId) => {
-    if (!window.confirm('Are you sure you want to delete this training program?')) {
-      return;
-    }
-
+  const confirmDelete = async () => {
     try {
-      const response = await fetch(`${API_URL}/programs/${programId}`, {
-        method: 'DELETE'
-      });
-
+      const response = await fetch(
+        `${API_URL}/programs/${deleteModal.programId}`,
+        { method: "DELETE" },
+      );
       const data = await response.json();
-
       if (data.success) {
-        toast.success('Training program deleted successfully');
+        toast.success("Program deleted");
         fetchPrograms();
-      } else {
-        toast.error(data.message);
-      }
-    } catch (err) {
-      console.error('Delete error:', err);
-      toast.error('Failed to delete training program');
+      } else toast.error(data.message);
+    } catch {
+      toast.error("Failed to delete program");
+    } finally {
+      setDeleteModal({ isOpen: false, programId: null, programTitle: "" });
     }
   };
 
   return (
-    <div className="training-management min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <div className="border-b border-slate-800/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
-            Training & Workforce Development
+    <div
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+      className="h-full flex flex-col px-6 py-6"
+    >
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6 shrink-0">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Training Management
           </h1>
-          <p className="text-slate-400 text-sm" style={{ fontFamily: "'Space Mono', monospace" }}>
-            Program Management · Session Scheduling · Employee Assignment · Attendance Tracking
+          <p className="text-sm text-gray-400 mt-0.5">
+            Manage programs, sessions, and employee assignments
           </p>
         </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          New Program
+        </button>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-slate-800/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-1" style={{ fontFamily: "'Space Mono', monospace" }}>
-            <button
-              onClick={() => setActiveTab('programs')}
-              className={`px-6 py-4 text-xs uppercase tracking-widest font-semibold transition-all duration-200 border-b-2 ${
-                activeTab === 'programs'
-                  ? 'border-cyan-400 text-cyan-300'
-                  : 'border-transparent text-slate-400 hover:text-slate-300'
-              }`}
-            >
-              Programs
-            </button>
-            <button
-              onClick={() => setActiveTab('create')}
-              className={`px-6 py-4 text-xs uppercase tracking-widest font-semibold transition-all duration-200 border-b-2 ${
-                activeTab === 'create'
-                  ? 'border-cyan-400 text-cyan-300'
-                  : 'border-transparent text-slate-400 hover:text-slate-300'
-              }`}
-            >
-              Create Program
-            </button>
-            {selectedProgram && (
-              <button
-                onClick={() => setActiveTab('details')}
-                className={`px-6 py-4 text-xs uppercase tracking-widest font-semibold transition-all duration-200 border-b-2 ${
-                  activeTab === 'details'
-                    ? 'border-cyan-400 text-cyan-300'
-                    : 'border-transparent text-slate-400 hover:text-slate-300'
-                }`}
-              >
-                Program Details
-              </button>
-            )}
-          </div>
-        </div>
+      <div className="flex-1 min-h-0 overflow-y-auto px-1 pb-6">
+        <TrainingList
+          programs={programs}
+          loading={loading}
+          filters={filters}
+          onFilterChange={setFilters}
+          onSelectProgram={setSelectedProgram}
+          onDeleteProgram={(id, title) =>
+            setDeleteModal({ isOpen: true, programId: id, programTitle: title })
+          }
+        />
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {activeTab === 'programs' && (
-          <TrainingList
-            programs={programs}
-            loading={loading}
-            filters={filters}
-            onFilterChange={setFilters}
-            onSelectProgram={handleSelectProgram}
-            onDeleteProgram={handleDeleteProgram}
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <CreateTrainingForm
+            onSubmit={handleCreateProgram}
+            onCancel={() => setShowCreateModal(false)}
           />
-        )}
+        </div>
+      )}
 
-        {activeTab === 'create' && (
-          <CreateTrainingForm onSubmit={handleCreateProgram} />
-        )}
-
-        {activeTab === 'details' && selectedProgram && (
+      {/* Details Modal */}
+      {selectedProgram && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <TrainingDetails
             program={selectedProgram}
             onUpdate={handleUpdateProgram}
-            onClose={() => {
-              setSelectedProgram(null);
-              setActiveTab('programs');
-            }}
+            onClose={() => setSelectedProgram(null)}
             onProgramsChange={fetchPrograms}
           />
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md p-8">
+            <div className="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-6 h-6 text-red-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 text-center mb-2">
+              Delete Program
+            </h3>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-gray-700">
+                "{deleteModal.programTitle}"
+              </span>
+              ? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() =>
+                  setDeleteModal({
+                    isOpen: false,
+                    programId: null,
+                    programTitle: "",
+                  })
+                }
+                className="flex-1 py-3 text-sm font-semibold rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-3 text-sm font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

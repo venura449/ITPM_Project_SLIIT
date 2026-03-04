@@ -312,6 +312,20 @@ class EmployeeController {
   }
 
   /**
+   * Get next available employee ID
+   * GET /api/employees/next-id
+   */
+  static async getNextEmployeeId(req, res) {
+    try {
+      const result = await Employee.getNextEmployeeId();
+      return res.status(200).json({ success: true, data: { next_id: result } });
+    } catch (err) {
+      console.error('Get next employee ID error:', err);
+      return res.status(500).json({ success: false, message: err.message || 'Failed to generate employee ID' });
+    }
+  }
+
+  /**
    * Delete employee
    * DELETE /api/employees/:id
    */
