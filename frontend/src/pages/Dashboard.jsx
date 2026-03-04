@@ -1,5 +1,5 @@
 import { useAuth } from "../hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import EmployeeManagement from "../components/EmployeeManagement";
 import TrainingManagement from "../components/TrainingManagement";
@@ -8,6 +8,7 @@ import DailyAttendance from "../components/DailyAttendance";
 import LeaveAndAttendance from "../components/LeaveAndAttendance";
 import SettingsPanel from "../components/SettingsPanel";
 import EmployeeReport from "../components/EmployeeReport";
+import PayrollManagement from "../components/PayrollManagement";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const Icon = ({ d, className = "w-5 h-5" }) => (
@@ -36,6 +37,8 @@ const ICONS = {
     "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
   settings:
     "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
+  payroll:
+    "M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z",
   logout:
     "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
   chevronLeft: "M15 19l-7-7 7-7",
@@ -53,6 +56,7 @@ const NAV_ITEMS = [
   { key: "attendance", label: "Attendance", icon: ICONS.attendance },
   { key: "leave", label: "Leave", icon: ICONS.leave },
   { key: "reports", label: "Reports", icon: ICONS.reports },
+  { key: "payroll", label: "Payroll", icon: ICONS.payroll },
   { key: "settings", label: "Settings", icon: ICONS.settings },
 ];
 
@@ -268,37 +272,424 @@ const TopBar = ({ activeTab, user, onProfileEdit, onToggleSidebar }) => {
 };
 
 // ── Home Content ─────────────────────────────────────────────────────────────
-const HomeContent = ({ user, setActiveTab, onProfileEdit }) => (
-  <div className="p-6 lg:p-8 space-y-6 w-full">
-    {/* Welcome banner */}
-    <div
-      className="relative rounded-2xl p-6 lg:p-8 overflow-hidden text-white"
-      style={{
-        background:
-          "linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)",
-      }}
+const STAT_COLOR = {
+  blue: {
+    bg: "bg-blue-50",
+    icon: "bg-blue-100 text-blue-600",
+    val: "text-blue-700",
+    bar: "bg-blue-500",
+  },
+  green: {
+    bg: "bg-green-50",
+    icon: "bg-green-100 text-green-600",
+    val: "text-green-700",
+    bar: "bg-green-500",
+  },
+  amber: {
+    bg: "bg-amber-50",
+    icon: "bg-amber-100 text-amber-600",
+    val: "text-amber-700",
+    bar: "bg-amber-500",
+  },
+  purple: {
+    bg: "bg-purple-50",
+    icon: "bg-purple-100 text-purple-600",
+    val: "text-purple-700",
+    bar: "bg-purple-500",
+  },
+  teal: {
+    bg: "bg-teal-50",
+    icon: "bg-teal-100 text-teal-600",
+    val: "text-teal-700",
+    bar: "bg-teal-500",
+  },
+  rose: {
+    bg: "bg-rose-50",
+    icon: "bg-rose-100 text-rose-600",
+    val: "text-rose-700",
+    bar: "bg-rose-500",
+  },
+};
+
+const StatCard = ({ label, value, sub, color, iconD, onClick, loading }) => {
+  const c = STAT_COLOR[color] || STAT_COLOR.blue;
+  return (
+    <button
+      onClick={onClick}
+      className={`group text-left w-full rounded-2xl p-5 ${c.bg} border border-white/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5`}
     >
-      <div className="pointer-events-none absolute top-[-40px] right-[-30px] w-48 h-48 rounded-full bg-white/10" />
-      <div className="pointer-events-none absolute bottom-[-20px] left-[20%] w-32 h-32 rounded-full bg-white/8" />
-      <div className="relative z-10">
-        <p className="text-blue-200 text-xs font-semibold uppercase tracking-widest mb-1">
-          Welcome back
-        </p>
-        <h2 className="text-2xl md:text-3xl font-extrabold mb-1">
-          {user?.name || "User"}
-        </h2>
-        <p className="text-blue-200/80 text-sm">
-          {new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div
+          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${c.icon}`}
+        >
+          <Icon d={iconD} className="w-5 h-5" />
+        </div>
+        {loading ? (
+          <div className="flex-1 space-y-2 pt-1">
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+            <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
+          </div>
+        ) : (
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide truncate">
+              {label}
+            </p>
+            <p className={`text-2xl font-extrabold mt-0.5 ${c.val}`}>{value}</p>
+            <p className="text-xs text-gray-500 mt-0.5 truncate">{sub}</p>
+          </div>
+        )}
+      </div>
+      <div
+        className={`mt-3 h-1 rounded-full ${c.bar} opacity-30 group-hover:opacity-60 transition-opacity`}
+      />
+    </button>
+  );
+};
+
+const QuickAction = ({ label, iconD, color, onClick }) => {
+  const c = STAT_COLOR[color] || STAT_COLOR.blue;
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center gap-2 p-4 rounded-2xl ${c.bg} border border-white/60 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group`}
+    >
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.icon} group-hover:scale-110 transition-transform`}
+      >
+        <Icon d={iconD} className="w-5 h-5" />
+      </div>
+      <span className="text-xs font-semibold text-gray-700">{label}</span>
+    </button>
+  );
+};
+
+const API = "http://localhost:5000";
+
+const HomeContent = ({ user, setActiveTab }) => {
+  const [stats, setStats] = useState(null);
+  const [pendingLeaves, setPendingLeaves] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}` };
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+    const m = now.getMonth() + 1;
+    const y = now.getFullYear();
+
+    Promise.allSettled([
+      fetch(`${API}/api/employees`, { headers }).then((r) => r.json()),
+      fetch(`${API}/api/attendance/sheet?date=${today}`, { headers }).then(
+        (r) => r.json(),
+      ),
+      fetch(`${API}/api/leave/pending`, { headers }).then((r) => r.json()),
+      fetch(`${API}/api/training/programs`, { headers }).then((r) => r.json()),
+      fetch(`${API}/api/payroll?month=${m}&year=${y}`, { headers }).then((r) =>
+        r.json(),
+      ),
+    ]).then(([empR, attR, leaveR, trainR, payR]) => {
+      const emp = empR.status === "fulfilled" ? empR.value?.data || [] : [];
+      const att = attR.status === "fulfilled" ? attR.value?.data || [] : [];
+      const leave =
+        leaveR.status === "fulfilled" ? leaveR.value?.data || [] : [];
+      const train =
+        trainR.status === "fulfilled"
+          ? trainR.value?.data || trainR.value?.programs || []
+          : [];
+      const pay = payR.status === "fulfilled" ? payR.value : null;
+
+      setStats({
+        totalEmployees: emp.length,
+        activeEmployees: emp.filter((e) => e.status !== "Resigned").length,
+        presentToday: att.filter((a) => a.attendance_status === "Present")
+          .length,
+        absentToday: att.filter((a) => a.attendance_status === "Absent").length,
+        onLeave: att.filter((a) => a.attendance_status === "Leave").length,
+        notMarked: att.filter((a) => a.attendance_status === "Not Marked")
+          .length,
+        pendingLeaves: leave.length,
+        activeTraining: train.filter((t) => t.status === "Active").length,
+        totalTraining: train.length,
+        payrollNetTotal: pay?.summary?.total_net_salary || 0,
+        payrollProcessed: pay?.summary?.processed_count || 0,
+        payrollPaid: pay?.summary?.paid_count || 0,
+        payrollCount: pay?.data?.length || 0,
+      });
+      setPendingLeaves(leave.slice(0, 6));
+      setLoading(false);
+    });
+  }, []);
+
+  const fmtCurrency = (n) =>
+    new Intl.NumberFormat("en-LK", {
+      style: "currency",
+      currency: "LKR",
+      maximumFractionDigits: 0,
+    }).format(n || 0);
+
+  const now = new Date();
+  const monthName = now.toLocaleString("default", { month: "long" });
+
+  const statCards = [
+    {
+      label: "Total Employees",
+      value: loading ? "—" : stats?.totalEmployees,
+      sub: loading ? "" : `${stats?.activeEmployees} active`,
+      color: "blue",
+      iconD: ICONS.employees,
+      tab: "employees",
+    },
+    {
+      label: "Present Today",
+      value: loading ? "—" : stats?.presentToday,
+      sub: loading
+        ? ""
+        : `${stats?.absentToday} absent · ${stats?.onLeave} on leave`,
+      color: "green",
+      iconD: ICONS.attendance,
+      tab: "attendance",
+    },
+    {
+      label: "Pending Leaves",
+      value: loading ? "—" : stats?.pendingLeaves,
+      sub: "awaiting approval",
+      color: !loading && stats?.pendingLeaves > 0 ? "amber" : "green",
+      iconD: ICONS.leave,
+      tab: "leave",
+    },
+    {
+      label: "Training Programs",
+      value: loading ? "—" : stats?.activeTraining,
+      sub: loading ? "" : `${stats?.totalTraining} total programs`,
+      color: "purple",
+      iconD: ICONS.training,
+      tab: "training",
+    },
+    {
+      label: `${monthName} Payroll`,
+      value: loading ? "—" : fmtCurrency(stats?.payrollNetTotal),
+      sub: loading
+        ? ""
+        : `${stats?.payrollProcessed} processed · ${stats?.payrollPaid} paid`,
+      color: "teal",
+      iconD: ICONS.payroll,
+      tab: "payroll",
+    },
+    {
+      label: "Not Marked Today",
+      value: loading ? "—" : stats?.notMarked,
+      sub: "attendance not recorded",
+      color: !loading && stats?.notMarked > 0 ? "rose" : "green",
+      iconD: ICONS.attendance,
+      tab: "attendance",
+    },
+  ];
+
+  const quickActions = [
+    {
+      label: "Employees",
+      iconD: ICONS.employees,
+      color: "blue",
+      tab: "employees",
+    },
+    {
+      label: "Attendance",
+      iconD: ICONS.attendance,
+      color: "green",
+      tab: "attendance",
+    },
+    { label: "Leave", iconD: ICONS.leave, color: "amber", tab: "leave" },
+    {
+      label: "Training",
+      iconD: ICONS.training,
+      color: "purple",
+      tab: "training",
+    },
+    { label: "Payroll", iconD: ICONS.payroll, color: "teal", tab: "payroll" },
+    { label: "Reports", iconD: ICONS.reports, color: "rose", tab: "reports" },
+    {
+      label: "Settings",
+      iconD: ICONS.settings,
+      color: "blue",
+      tab: "settings",
+    },
+  ];
+
+  return (
+    <div className="p-6 lg:p-8 space-y-6 w-full max-w-7xl mx-auto">
+      {/* Welcome banner */}
+      <div
+        className="relative rounded-2xl p-6 lg:p-8 overflow-hidden text-white"
+        style={{
+          background:
+            "linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)",
+        }}
+      >
+        <div className="pointer-events-none absolute top-[-40px] right-[-30px] w-56 h-56 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute bottom-[-20px] left-[20%] w-36 h-36 rounded-full bg-white/8" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-blue-200 text-xs font-semibold uppercase tracking-widest mb-1">
+              Welcome back
+            </p>
+            <h2 className="text-2xl md:text-3xl font-extrabold mb-1">
+              {user?.name || "User"}
+            </h2>
+            <p className="text-blue-200/80 text-sm">
+              {now.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "Employees", tab: "employees" },
+              { label: "Attendance", tab: "attendance" },
+              { label: "Payroll", tab: "payroll" },
+            ].map((b) => (
+              <button
+                key={b.tab}
+                onClick={() => setActiveTab(b.tab)}
+                className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-semibold transition-all duration-200 border border-white/20"
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Stat cards */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-3">
+          Overview
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+          {statCards.map((card) => (
+            <StatCard
+              key={card.label}
+              label={card.label}
+              value={card.value}
+              sub={card.sub}
+              color={card.color}
+              iconD={card.iconD}
+              loading={loading}
+              onClick={() => setActiveTab(card.tab)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom section: pending leaves + quick actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Pending leave requests */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center">
+                <Icon d={ICONS.leave} className="w-4 h-4 text-amber-600" />
+              </div>
+              <h3 className="text-sm font-bold text-gray-800">
+                Pending Leave Requests
+              </h3>
+              {!loading && stats?.pendingLeaves > 0 && (
+                <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                  {stats.pendingLeaves}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setActiveTab("leave")}
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              View all &rarr;
+            </button>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="px-5 py-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3" />
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : pendingLeaves.length === 0 ? (
+              <div className="px-5 py-8 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-3">
+                  <Icon d="M5 13l4 4L19 7" className="w-6 h-6 text-green-600" />
+                </div>
+                <p className="text-sm font-semibold text-gray-700">
+                  No pending leave requests
+                </p>
+                <p className="text-xs text-gray-400 mt-1">All caught up!</p>
+              </div>
+            ) : (
+              pendingLeaves.map((req, i) => (
+                <div
+                  key={req.id || i}
+                  className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    {(req.employee_name || req.name || "?")
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">
+                      {req.employee_name ||
+                        req.name ||
+                        `Employee ${req.employee_id}`}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {req.leave_type} &bull;{" "}
+                      {req.start_date
+                        ? new Date(req.start_date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : ""}
+                      {req.end_date && req.end_date !== req.start_date
+                        ? ` – ${new Date(req.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                        : ""}
+                    </p>
+                  </div>
+                  <span className="shrink-0 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                    Pending
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <h3 className="text-sm font-bold text-gray-800 mb-4">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-3 gap-3">
+            {quickActions.map((a) => (
+              <QuickAction
+                key={a.tab}
+                label={a.label}
+                iconD={a.iconD}
+                color={a.color}
+                onClick={() => setActiveTab(a.tab)}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const Dashboard = () => {
@@ -360,11 +751,7 @@ export const Dashboard = () => {
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">
           {activeTab === "home" && (
-            <HomeContent
-              user={user}
-              setActiveTab={setActiveTab}
-              onProfileEdit={() => setShowProfileModal(true)}
-            />
+            <HomeContent user={user} setActiveTab={setActiveTab} />
           )}
           {activeTab === "employees" && <EmployeeManagement />}
           {activeTab === "training" && <TrainingManagement />}
@@ -372,6 +759,7 @@ export const Dashboard = () => {
           {activeTab === "leave" && <LeaveAndAttendance />}
           {activeTab === "settings" && <SettingsPanel />}
           {activeTab === "reports" && <EmployeeReport />}
+          {activeTab === "payroll" && <PayrollManagement />}
         </main>
       </div>
     </div>
