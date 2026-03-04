@@ -10,6 +10,7 @@ const trainingRoutes = require('./routes/trainingRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const payrollRoutes = require('./routes/payrollRoutes');
 
 const app = express();
 
@@ -48,6 +49,9 @@ app.use('/api/leave', leaveRoutes);
 
 // Settings routes
 app.use('/api/settings', settingsRoutes);
+
+// Payroll routes
+app.use('/api/payroll', payrollRoutes);
 
 // 404 handler
 app.use((req, res) => {

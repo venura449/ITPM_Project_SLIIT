@@ -34,18 +34,30 @@ function AppContent() {
       {/* Admin Portal Routes */}
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage />}
+        element={
+          isAuthenticated && localStorage.getItem("userType") !== "employee" ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <AuthPage />
+          )
+        }
       />
       <Route
         path="/dashboard"
-        element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+        element={
+          isAuthenticated && localStorage.getItem("userType") !== "employee" ? (
+            <Dashboard />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
       />
 
       {/* Default redirect */}
       <Route
         path="/"
         element={
-          isAuthenticated ? (
+          isAuthenticated && localStorage.getItem("userType") !== "employee" ? (
             <Navigate to="/dashboard" />
           ) : (
             <Navigate to="/login" />
