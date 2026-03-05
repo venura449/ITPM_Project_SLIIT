@@ -15,28 +15,30 @@ const payrollRoutes = require('./routes/payrollRoutes');
 const app = express();
 
 // Middleware
+// Comma-separated allowed origins. Set ALLOWED_ORIGINS env var on Render.
 const allowedOrigins = (
   process.env.ALLOWED_ORIGINS ||
   "http://localhost:5173,https://itpm-project-sliit.vercel.app"
 )
   .split(",")
-  .map((o) => o.trim());
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // allow server-to-server / curl requests (no origin)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS: origin '${origin}' not allowed`));
-    }
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Return false (not an error) so the response still sends — just without
+    // the Allow-Origin header, which the browser will reject.
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// Handle preflight OPTIONS requests for all routes
+// Handle preflight OPTIONS requests for all routes BEFORE any other middleware
 app.options("*", cors(corsOptions));
 
 app.use(cors(corsOptions));
