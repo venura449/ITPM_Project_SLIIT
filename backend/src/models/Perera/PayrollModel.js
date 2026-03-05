@@ -248,7 +248,10 @@ class PayrollModel {
                     [emp.emp_id, month, year]
                 );
 
-                const present_days = parseFloat(att[0]?.present_days || 0) + parseFloat(att[0]?.half_days || 0);
+                const present_days = Math.round(
+                    (parseFloat(att[0]?.present_days || 0) + parseFloat(att[0]?.half_days || 0)) * 2
+                ) / 2; // keep .5 precision but avoid floating-point drift
+                const present_days_int = Math.round(present_days); // INT column safe value
                 const working_days = parseInt(att[0]?.total_days || 0) || 22;
 
                 const c = this._compute({
@@ -281,7 +284,7 @@ class PayrollModel {
                         c.epf_employee, c.epf_employer, c.etf,
                         emp.income_tax || 0, emp.other_deductions || 0,
                         c.total_deductions, c.net_salary,
-                        working_days, present_days, 'Draft', createdBy || null
+                        working_days, present_days_int, 'Draft', createdBy || null
                     ]
                 );
                 generated++;
