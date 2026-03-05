@@ -123,9 +123,12 @@ const SettingsPanel = () => {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/settings", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/settings`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
       const data = await res.json();
       if (data.success) {
         const map = {};
@@ -150,14 +153,17 @@ const SettingsPanel = () => {
         key,
         value,
       }));
-      const res = await fetch("http://localhost:5000/api/settings", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/settings`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ settings }),
         },
-        body: JSON.stringify({ settings }),
-      });
+      );
       const data = await res.json();
       if (data.success) {
         const map = {};

@@ -24,7 +24,7 @@ const AttendanceReport = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/attendance/report-all?month=${month}&year=${year}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/report-all?month=${month}&year=${year}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

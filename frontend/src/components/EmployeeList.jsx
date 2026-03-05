@@ -49,7 +49,7 @@ const EmployeeList = ({
     setPasswordModal((prev) => ({ ...prev, loading: true }));
     try {
       const response = await fetch(
-        "http://localhost:5000/api/employee-auth/generate-password",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/employee-auth/generate-password`,
         {
           method: "POST",
           headers: {

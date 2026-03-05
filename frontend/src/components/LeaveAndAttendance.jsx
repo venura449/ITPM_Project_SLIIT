@@ -376,7 +376,7 @@ const LeaveManagement = () => {
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null });
   const [statusFilter, setStatusFilter] = useState("");
 
-  const API = "http://localhost:5000/api/leave";
+  const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/leave`;
   const token = () => localStorage.getItem("token");
 
   useEffect(() => {

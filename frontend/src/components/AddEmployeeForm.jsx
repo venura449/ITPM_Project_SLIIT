@@ -95,9 +95,14 @@ const AddEmployeeForm = ({ onSubmit, onCancel }) => {
     const fetchNextId = async () => {
       setIdLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/employees/next-id", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/employees/next-id`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
         const data = await res.json();
         if (data.success) {
           setFormData((prev) => ({ ...prev, employee_id: data.data.next_id }));

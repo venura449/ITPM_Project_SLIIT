@@ -37,18 +37,21 @@ const ProfileEditModal = ({ user, onClose, onUpdate }) => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/profile`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            phone: formData.phone,
+            address: formData.address,
+          }),
         },
-        body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-          address: formData.address,
-        }),
-      });
+      );
 
       const data = await response.json();
 

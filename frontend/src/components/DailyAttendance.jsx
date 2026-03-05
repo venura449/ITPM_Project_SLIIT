@@ -89,7 +89,7 @@ const DailyAttendance = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/attendance/sheet?date=${selectedDate}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/sheet?date=${selectedDate}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -119,7 +119,7 @@ const DailyAttendance = () => {
     }
     try {
       const res = await fetch(
-        `http://localhost:5000/api/attendance/search?query=${encodeURIComponent(q)}&date=${selectedDate}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/search?query=${encodeURIComponent(q)}&date=${selectedDate}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -134,18 +134,21 @@ const DailyAttendance = () => {
   const markAttendance = async (employeeId, status) => {
     setSaving((prev) => ({ ...prev, [employeeId]: true }));
     try {
-      const res = await fetch("http://localhost:5000/api/attendance/mark", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/mark`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            employee_id: employeeId,
+            date: selectedDate,
+            status,
+          }),
         },
-        body: JSON.stringify({
-          employee_id: employeeId,
-          date: selectedDate,
-          status,
-        }),
-      });
+      );
       const data = await res.json();
       if (data.success) {
         setMarkedAttendance((prev) => ({ ...prev, [employeeId]: status }));

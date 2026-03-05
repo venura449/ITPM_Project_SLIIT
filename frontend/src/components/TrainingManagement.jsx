@@ -16,7 +16,7 @@ const TrainingManagement = () => {
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({ type: "", status: "", search: "" });
 
-  const API_URL = "http://localhost:5000/api/training";
+  const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/training`;
 
   const fetchPrograms = async () => {
     setLoading(true);

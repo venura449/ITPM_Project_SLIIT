@@ -36,7 +36,7 @@ const TrainingDetails = ({ program, onUpdate, onClose, onProgramsChange }) => {
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [employeeSearchInput, setEmployeeSearchInput] = useState("");
 
-  const API_URL = "http://localhost:5000/api/training";
+  const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/training`;
 
   useEffect(() => {
     fetchProgramDetails();
@@ -45,7 +45,9 @@ const TrainingDetails = ({ program, onUpdate, onClose, onProgramsChange }) => {
 
   const fetchEmployees = async () => {
     try {
-      const r = await fetch("http://localhost:5000/api/employees");
+      const r = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/employees`,
+      );
       const d = await r.json();
       if (d.success) setEmployees(d.data);
     } catch {}

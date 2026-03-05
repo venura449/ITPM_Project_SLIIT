@@ -67,7 +67,7 @@ const LEAVE_TYPE_COLORS = {
 const token = () => localStorage.getItem("token");
 
 const api = (path) =>
-  fetch(`http://localhost:5000${path}`, {
+  fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}${path}`, {
     headers: { Authorization: `Bearer ${token()}` },
   }).then((r) => r.json());
 

@@ -54,7 +54,7 @@ const STATUS_CFG = {
   },
 };
 
-const API = "http://localhost:5000/api/payroll";
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payroll`;
 const token = () => localStorage.getItem("token");
 const headers = () => ({
   Authorization: `Bearer ${token()}`,
@@ -965,7 +965,10 @@ export default function PayrollManagement() {
     try {
       const [sRes, eRes] = await Promise.all([
         fetch(`${API}/salary-structures`, { headers: headers() }),
-        fetch("http://localhost:5000/api/employees", { headers: headers() }),
+        fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/employees`,
+          { headers: headers() },
+        ),
       ]);
       const [sData, eData] = await Promise.all([sRes.json(), eRes.json()]);
       if (sData.success) setStructures(sData.data || []);

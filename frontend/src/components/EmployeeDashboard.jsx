@@ -167,7 +167,7 @@ const EmployeeDashboard = () => {
   const loadEmployeeProfile = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/employee-auth/profile",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/employee-auth/profile`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -217,7 +217,7 @@ const EmployeeDashboard = () => {
   const updateProfile = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/employee-auth/profile",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/employee-auth/profile`,
         {
           method: "PUT",
           headers: {
@@ -281,7 +281,7 @@ const EmployeeDashboard = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/employee-auth/change-password",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/employee-auth/change-password`,
         {
           method: "PUT",
           headers: {
@@ -324,7 +324,7 @@ const EmployeeDashboard = () => {
     setLeaveLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/leave/my-requests",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/leave/my-requests`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -356,14 +356,17 @@ const EmployeeDashboard = () => {
     }
     setLeaveLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/leave/request", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/leave/request`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(leaveForm),
         },
-        body: JSON.stringify(leaveForm),
-      });
+      );
       const data = await response.json();
       if (data.success) {
         toast.success("Leave request submitted! âœ“", {
@@ -398,7 +401,7 @@ const EmployeeDashboard = () => {
     if (!window.confirm("Delete this leave request?")) return;
     try {
       const response = await fetch(
-        `http://localhost:5000/api/leave/request/${requestId}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/leave/request/${requestId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

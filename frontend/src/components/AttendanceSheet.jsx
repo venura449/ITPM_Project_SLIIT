@@ -38,7 +38,7 @@ const AttendanceSheet = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/attendance/sheet?date=${selectedDate}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/sheet?date=${selectedDate}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -79,7 +79,7 @@ const AttendanceSheet = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/attendance/search?query=${encodeURIComponent(query)}&date=${selectedDate}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/search?query=${encodeURIComponent(query)}&date=${selectedDate}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -102,7 +102,7 @@ const AttendanceSheet = () => {
   const markAttendance = async (employeeId, status) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/attendance/mark`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/mark`,
         {
           method: "POST",
           headers: {
