@@ -16,13 +16,7 @@ const app = express();
 
 // Middleware
 // Comma-separated allowed origins. Set ALLOWED_ORIGINS env var on Render.
-const allowedOrigins = (
-  process.env.ALLOWED_ORIGINS ||
-  "http://localhost:5173,https://itpm-project-sliit.vercel.app"
-)
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const allowedOrigins = ("http://localhost:5173,https://itpm-project-sliit.vercel.app").split(",").map(origin => origin.trim());
 
 const corsOptions = {
   origin: (origin, callback) => {
